@@ -1,53 +1,185 @@
-# quarkus-api
+# Employee Management Project
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+Este proyecto es una aplicación Quarkus para gestionar empleados, trabajos, géneros y horas trabajadas utilizando una base de datos Oracle.
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+## Estructura del Proyecto
 
-## Running the application in dev mode
+La estructura del proyecto está organizada de la siguiente manera:
 
-You can run your application in dev mode that enables live coding using:
-```shell script
-./mvnw compile quarkus:dev
+# Estructura del Proyecto
+
+
+```plaintext
+employee-management/
+├── pom.xml
+├── src
+│   ├── main
+│   │   ├── java
+│   │   │   └──
+│   │   │       ├── entity
+│   │   │       │   ├── Employee.java
+│   │   │       │   ├── Gender.java
+│   │   │       │   ├── Job.java
+│   │   │       │   └── WorkedHours.java
+│   │   │       ├── repository
+│   │   │       │   ├── EmployeeRepository.java
+│   │   │       │   ├── GenderRepository.java
+│   │   │       │   ├── JobRepository.java
+│   │   │       │   └── WorkedHoursRepository.java
+│   │   │       ├── service
+│   │   │       │   └── EmployeeService.java
+│   │   │       ├── resource
+│   │   │       │   └── EmployeeResource.java
+│   │   │       ├── dto
+│   │   │       │   ├── EmployeeRequest.java
+│   │   │       │   ├── EmployeeResponse.java
+│   │   │       │   ├── EmployeeListResponse.java
+│   │   │       │   ├── PaymentResponse.java
+│   │   │       │   ├── WorkedHoursRequest.java
+│   │   │       │   └── WorkedHoursResponse.java
+│   │   └── resources
+│   │           └── application.yml
+│   │
+│   ├── main
+│   │   ├── java
+│             └──  test  
+│                     └── EmployeeServiceTest.java
+│                     └── EmployeeResourceTest.java    
+│                 
+│                    
+│                        
+├── mvnw
+├── mvnw.cmd
+└── target
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at http://localhost:8080/q/dev/.
+### Descripción de Carpetas y Archivos
 
-## Packaging and running the application
+#### Entidades (`entity`)
 
-The application can be packaged using:
-```shell script
-./mvnw package
-```
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+- **`Employee.java`**: Define la entidad `Employee` con sus atributos y relaciones.
+- **`Gender.java`**: Define la entidad `Gender` con sus atributos.
+- **`Job.java`**: Define la entidad `Job` con sus atributos.
+- **`WorkedHours.java`**: Define la entidad `WorkedHours` con sus atributos y relaciones.
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
+#### Repositorios (`repository`)
 
-If you want to build an _über-jar_, execute the following command:
-```shell script
-./mvnw package -Dquarkus.package.jar.type=uber-jar
-```
+- **`EmployeeRepository.java`**: Repositorio para la entidad `Employee`.
+- **`GenderRepository.java`**: Repositorio para la entidad `Gender`.
+- **`JobRepository.java`**: Repositorio para la entidad `Job`.
+- **`WorkedHoursRepository.java`**: Repositorio para la entidad `WorkedHours`.
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
+#### Servicios (`service`)
 
-## Creating a native executable
+- **`EmployeeService.java`**: Servicio que contiene la lógica de negocio para gestionar empleados.
 
-You can create a native executable using: 
-```shell script
-./mvnw package -Dnative
-```
+#### Recursos (`resource`)
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using: 
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
-```
+- **`EmployeeResource.java`**: Controlador REST que expone los endpoints para gestionar empleados.
 
-You can then execute your native executable with: `./target/quarkus-api-1.0.0-SNAPSHOT-runner`
+#### DTOs (`dto`)
 
-If you want to learn more about building native executables, please consult https://quarkus.io/guides/maven-tooling.
+- **`EmployeeRequest.java`**: Objeto de transferencia de datos para recibir solicitudes de creación de empleados.
+- **`EmployeeResponse.java`**: Objeto de transferencia de datos para devolver respuestas de empleados.
+- **`EmployeeListResponse.java`**: Objeto de transferencia de datos para devolver listas de empleados.
 
-## Related Guides
+### Configuración (`resources`)
 
-- REST Jackson ([guide](https://quarkus.io/guides/rest#json-serialisation)): Jackson serialization support for Quarkus REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it
-- JDBC Driver - Oracle ([guide](https://quarkus.io/guides/datasource)): Connect to the Oracle database via JDBC
+- **`application.properties`**: Archivo de configuración de la aplicación donde se define la conexión a la base de datos Oracle.
+
+## Configuración de la Base de Datos Oracle
+
+1. **Crear las Tablas Necesarias**:
+
+   ```sql
+   CREATE TABLE genders (
+       id NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+       name VARCHAR2(50) NOT NULL
+   );
+
+   CREATE TABLE jobs (
+       id NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+       name VARCHAR2(50) NOT NULL,
+       salary NUMBER NOT NULL
+   );
+
+   CREATE TABLE employees (
+       id NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+       name VARCHAR2(50) NOT NULL,
+       last_name VARCHAR2(50) NOT NULL,
+       birthdate DATE NOT NULL,
+       job_id NUMBER REFERENCES jobs(id),
+       gender_id NUMBER REFERENCES genders(id)
+   );
+
+   CREATE TABLE worked_hours (
+       id NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+       employee_id NUMBER REFERENCES employees(id),
+       worked_date DATE NOT NULL,
+       hours_worked NUMBER NOT NULL
+   );
+   ```
+
+## Configuración del Proyecto Quarkus
+
+1. **Crear el Proyecto Quarkus**:
+
+   ```bash
+   mvn io.quarkus:quarkus-maven-plugin:2.2.3.Final:create \
+       -DprojectGroupId=com.example \
+       -DprojectArtifactId=employee-management \
+       -DclassName="com.example.EmployeeResource" \
+       -Dpath="/employees"
+   ```
+
+2. **Actualizar el `pom.xml`**:
+
+   Añade las siguientes dependencias en tu `pom.xml`:   <dependencies>
+       <dependency>
+           <groupId>io.quarkus</groupId>
+           <artifactId>quarkus-jdbc-oracle</artifactId>
+       </dependency>
+       <dependency>
+           <groupId>io.quarkus</groupId>
+           <artifactId>quarkus-hibernate-orm</artifactId>
+       </dependency>
+       <dependency>
+           <groupId>io.quarkus</groupId>
+           <artifactId>quarkus-resteasy-jackson</artifactId>
+       </dependency>
+   </dependencies>
+
+   ```xml
+
+   ```
+
+3. **Configurar `application.yml`**:
+
+   Configura la conexión a la base de datos Oracle en el archivo `src/main/resources/application.properties`:
+
+   ```properties
+   quarkus.datasource.db-kind=oracle
+   quarkus.datasource.jdbc.url=jdbc:oracle:thin:@localhost:1521:xe
+   quarkus.datasource.username=your_username
+   quarkus.datasource.password=your_password
+   quarkus.hibernate-orm.database.generation=none
+   ```
+
+## Pruebas en Postman
+
+1. **Agregar un Nuevo Empleado**:
+   - **URL**: `POST http://localhost:8080/employees`
+   - **Body** (JSON):
+
+     ```json
+     {
+       "genderId": 1,
+       "jobId": 1,
+       "name": "John",
+       "lastName": "Doe",
+       "birthdate": "1980-01-01"
+     }
+     ```
+
+2. **Consultar Empleados por Puesto**:
+   - **URL**: `GET http://localhost:8080/employees/by-job/1`
