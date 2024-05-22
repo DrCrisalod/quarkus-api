@@ -1,0 +1,12 @@
+quarkus:
+  datasource:
+    db-kind: oracle
+    jdbc:
+      url: jdbc:oracle:thin:@localhost:1521:xe
+    username: your_username
+    password: your_password
+  hibernate-orm:
+    database:
+      generation: none
+  log:
+    level: DEBUG

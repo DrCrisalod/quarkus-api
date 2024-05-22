@@ -1,5 +1,7 @@
 package resource;
 
+import java.time.LocalDate;
+
 import Service.EmployeeService;
 import dto.EmployeeRequest;
 import dto.WorkedHoursRequest;
@@ -9,6 +11,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.inject.Inject;
@@ -33,14 +36,14 @@ public class EmployeeResource {
     }
 
     @POST
-    @Path("/worked-hours")
-    public Response addWorkedHours(WorkedHoursRequest request) {
-        return employeeService.addWorkedHours(request);
+    @Path("/{employeeId}/worked-hours")
+    public Response addWorkedHours(@PathParam("employeeId") Long employeeId, WorkedHoursRequest request) {
+        return employeeService.addWorkedHours(employeeId, request);
     }
 
     @GET
-    @Path("/payments/{employeeId}")
-    public Response calculatePayments(@PathParam("employeeId") Long employeeId) {
-        return employeeService.calculatePayments(employeeId);
+    @Path("/{employeeId}/payments")
+    public Response calculatePayment(@PathParam("employeeId") Long employeeId, @QueryParam("startDate") String startDate, @QueryParam("endDate") String endDate) {
+        return employeeService.calculatePayment(employeeId, LocalDate.parse(startDate), LocalDate.parse(endDate));
     }
 }

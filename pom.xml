@@ -5,10 +5,9 @@
     <artifactId>quarkus-api</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
-    <properties>
-		 <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <compiler-plugin.version>3.10.1</compiler-plugin.version>
+   <properties>
+        <compiler-plugin.version>3.12.1</compiler-plugin.version>
+        <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
@@ -33,13 +32,14 @@
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest-jackson</artifactId>
+            <artifactId>quarkus-arc</artifactId>
         </dependency>
         <dependency>
-           <groupId>io.quarkus</groupId>
-           <artifactId>quarkus-hibernate-orm</artifactId>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-junit5</artifactId>
+            <scope>test</scope>
         </dependency>
-        <dependency>
+		 <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-hibernate-orm-panache</artifactId>
         </dependency> 
@@ -48,9 +48,7 @@
     		<artifactId>lombok</artifactId>
    			<version>1.18.22</version>
     		<scope>provided</scope>
-      </dependency>
-
-       
+      </dependency>       
        <dependency>
            <groupId>io.quarkus</groupId>
            <artifactId>quarkus-resteasy-jackson</artifactId>
@@ -61,12 +59,7 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-arc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5</artifactId>
-            <scope>test</scope>
+            <artifactId>quarkus-config-yaml</artifactId>
         </dependency>
     </dependencies>
 
@@ -143,3 +136,4 @@
         </profile>
     </profiles>
 </project>
+

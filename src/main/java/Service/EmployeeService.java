@@ -4,10 +4,12 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
+import jakarta.persistence.Id;
 import repository.EmployeeRepository;
 import repository.JobRepository;
 import repository.WorkedHoursRepository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,33 +21,40 @@ import dto.PaymentResponse;
 import dto.WorkedHoursRequest;
 import dto.WorkedHoursResponse;
 import entity.Employee;
+import entity.Gender;
+import entity.Job;
 import entity.WorkedHours;
 import lombok.RequiredArgsConstructor;
 
-
 @ApplicationScoped
-@RequiredArgsConstructor(onConstructor_ = @Inject)
 public class EmployeeService {
-    private final EmployeeRepository employeeRepository;
-    private final JobRepository jobRepository;
-    private final WorkedHoursRepository workedHoursRepository;
+    @Inject
+    EmployeeRepository employeeRepository;
+    @Inject
+    JobRepository jobRepository;
+    @Inject
+    WorkedHoursRepository workedHoursRepository;
 
     @Transactional
     public Response addEmployee(EmployeeRequest request) {
-    	// Verificar si el empleado ya existe
         if (employeeRepository.existsByNameAndLastName(request.getName(), request.getLastName())) {
             return Response.status(Response.Status.CONFLICT).entity("Employee already exists").build();
         }
-        // Verificar si el trabajo existe
-        if (!jobRepository.findByIdOptional(request.getJobId()).isPresent()) {
+
+        Job job = jobRepository.findById(request.getJobId());
+        if (job == null) {
             return Response.status(Response.Status.NOT_FOUND).entity("Job not found").build();
         }
+
+        Gender gender = new Gender();
+        gender.setId(request.getGenderId());
 
         Employee employee = new Employee();
         employee.setName(request.getName());
         employee.setLastName(request.getLastName());
         employee.setBirthdate(LocalDate.parse(request.getBirthdate()));
-        employee.setJob(jobRepository.findById(request.getJobId()));
+        employee.setJob(job);
+        employee.setGender(gender);
 
         employeeRepository.persist(employee);
 
@@ -59,21 +68,22 @@ public class EmployeeService {
             .collect(Collectors.groupingBy(Employee::getLastName))
             .values()
             .stream()
-            .flatMap(List::stream)
+            .map(list -> list.stream().findFirst().orElse(null))
+            .filter(e -> e != null)
             .map(EmployeeResponse::new)
             .collect(Collectors.toList());
 
-        return Response.ok(new EmployeeListResponse(filteredEmployees, true)).build();
+        return Response.ok(filteredEmployees).build();
     }
 
     @Transactional
-    public Response addWorkedHours(WorkedHoursRequest request) {
-        if (!employeeRepository.findByIdOptional(request.getEmployeeId()).isPresent()) {
+    public Response addWorkedHours(Long employeeId, WorkedHoursRequest request) {
+        if (!employeeRepository.findByIdOptional(employeeId).isPresent()) {
             return Response.status(Response.Status.NOT_FOUND).entity("Employee not found").build();
         }
 
         WorkedHours workedHours = new WorkedHours();
-        workedHours.setEmployeeId(request.getEmployeeId());
+        workedHours.setEmployeeId(employeeId);
         workedHours.setWorkedDate(LocalDate.parse(request.getWorkedDate()));
         workedHours.setHoursWorked(request.getHoursWorked());
 
@@ -82,16 +92,21 @@ public class EmployeeService {
         return Response.ok(new WorkedHoursResponse(workedHours.getId(), true)).build();
     }
 
-    public Response calculatePayments(Long employeeId) {
-        Employee employee = employeeRepository.findById(employeeId);
-        if(employee == null) {
-            return Response.status(Response.Status.NOT_FOUND).entity("Employee not found").build();
+    public Response calculatePayment(Long employeeId, LocalDate startDate, LocalDate endDate) {
+        List<WorkedHours> workedHoursList = workedHoursRepository.find("employeeId = ?1 and workedDate between ?2 and ?3", employeeId, startDate, endDate).list();
+        if (workedHoursList.isEmpty()) {
+            return Response.status(Response.Status.NOT_FOUND).entity("No worked hours found for this period").build();
         }
 
-        List<WorkedHours> workedHoursList = workedHoursRepository.find("employeeId", employeeId).list();
-        int totalHours = workedHoursList.stream().mapToInt(WorkedHours::getHoursWorked).sum();
-        double payment = totalHours * employee.getJob().getSalary().doubleValue();
+        Employee employee = employeeRepository.findById(employeeId);
+        BigDecimal totalHours = workedHoursList.stream()
+            .map(WorkedHours::getHoursWorked)
+            .map(BigDecimal::valueOf)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalPayment = totalHours.multiply(employee.getJob().getSalary());
 
-        return Response.ok(new PaymentResponse(totalHours, payment)).build();
+        PaymentResponse paymentResponse = new PaymentResponse(employeeId, totalHours, totalPayment, true);
+        return Response.ok(paymentResponse).build();
     }
 }
+

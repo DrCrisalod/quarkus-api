@@ -1,5 +1,0 @@
-   quarkus.datasource.db-kind=oracle
-   quarkus.datasource.jdbc.url=jdbc:oracle:thin:@localhost:8080:xe
-   quarkus.datasource.username=your_username
-   quarkus.datasource.password=your_password
-   quarkus.hibernate-orm.database.generation=none
